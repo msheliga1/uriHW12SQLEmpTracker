@@ -13,7 +13,7 @@ Link to Video on GitHub [Link](./examples/hw10LogoGenSheliga.webm)   Note that t
 [Link to Acceptance Criteria ](#acceptance-criteria)   
 
 ## Project Goals     
-Use node, inquirer and Object Oriented Inherited classes  to create an SVG log usingn answers to inquirer prompts.  
+Use node, inquirer and SQL to create an 3 table employee-role-department database.  
 
 ========================================================   
 ## Technical Project Details    
