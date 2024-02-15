@@ -1,0 +1,16 @@
+{
+  "name": "urihw12sqlemptracker",
+  "version": "1.0.0",
+  "description": "uri bootcamp HW 12 SQL Employee Tracker MJS 2.15.24\r Michael Sheliga - This repo is for the University of Richmond (URI) coding bootcamp.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "inquirer": "^8.2.4",
+    "mysql2": "^3.9.1"
+  }
+}
