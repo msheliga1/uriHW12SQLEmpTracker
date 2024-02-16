@@ -5,10 +5,9 @@ Michael Sheliga - This repo is for the University of Richmond (URI) coding bootc
 ## Link to Repo, Screenshot(s) and/or Video(s)
 Link to GitHub Repo: https://github.com/msheliga1/uriHW12SQLEmpTracker    
 <!---  Link to deployed github.io site. https://msheliga1.github.io/uriHW9NodeReadmeGen --->  
-Link to logo.svg: https://github.com/msheliga1/uriHW10OOPLogoGenerator/blob/main/examples/logo.svg    
-Bonus Link to html file (viewable in firefox) with SVG Logo!! : https://github.com/msheliga1/uriHW10OOPLogoGenerator/blob/main/examples/logo.html     
-Link to Video on Google Drive: https://drive.google.com/file/d/1nLvEaC9at3JhJc0knj-ZJ8N_nNKHrIT9/view?usp=sharing  
-Link to Video on GitHub [Link](./examples/hw10LogoGenSheliga.webm)   Note that this video may be too large to play in GitHub, so you will need to download and play from your computer. WindowsMediaPlayer worked for me.   
+<!-- Link to logo.svg: https://github.com/msheliga1/uriHW10OOPLogoGenerator/blob/main/examples/logo.svg  --->  
+Link to Video on Google Drive: https://drive.google.com/file/d/1NqSNz5vp7zit4KaUKGl09QM4u58gx9wA/view
+<!-- Link to Video on GitHub [Link](./examples/hw10LogoGenSheliga.webm)   Note that this video may be too large to play in GitHub, so you will need to download and play from your computer. WindowsMediaPlayer worked for me.  -->
 
 [Link to Acceptance Criteria ](#acceptance-criteria)   
 
@@ -46,7 +45,7 @@ Use node, inquirer and SQL to create an 3 table employee-role-department databas
     Deploy code (Settings...CodeAndAnimation->Pages on left, GitHub Pages->Branch->main, save)  
         - Deployed code name always msheliga1/github.io/RepoName !!  
     Make Sure it Works   
-    Insert Video and/or Screenshot X2 of deployment into readme file. 
+    Insert Screencastify (Chrome) Video and/or Screenshot X2 of deployment into readme file. 
   
 ## Tools and Technologies Used   
     Github - Branches not needed, but could use.  

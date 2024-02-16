@@ -3,6 +3,7 @@
 const fs = require('fs');
 const inq = require('inquirer');
 const mysql = require('mysql2');
+require('dotenv').config();
 
 // String constants - used in both prompt and checking for selection
 const viewEmpString  = "View All Employees"; 
@@ -22,7 +23,7 @@ function log(str) {
 // Create a connection to the db MJS 2.15.24
 function init() {
   log("MJS Starting init ... ")
-  const questions = initQuestions(); 
+  const questions = getMainPrompts(); 
   // Connect to database
   const db = myCreateConnection();
 
@@ -40,9 +41,9 @@ function myCreateConnection() {
     {
       host: 'localhost',
       // MySQL username,
-      user: 'root',
+      user: process.env.DB_USER,
       // MySQL password
-      password: 'root',
+      password: process.env.DB_PASSWORD,
       database: 'biz_db'
     }
     ); // end myCreateConnection
@@ -69,38 +70,45 @@ function mainMenu(questions, db) {
                 case viewEmpString: 
                     log("view All Employees selected");
                     viewEmployees(db);
+                    mainMenu(questions, db); 
                     break;
                 case addEmpString: 
                     log("Add Employee selected");
+                    console.log("Not Yet Implemented");
+                    mainMenu(questions, db); 
                     break;
                 case updateEmpRoleString: 
-                    log("Update Employee Role selected");
+                    log("Update Employee Role selected.");
+                    console.log("Not Yet Implemented");
+                    mainMenu(questions, db); 
                     break;
                 case viewRoleString: 
                     log("view All Roles selected");
                     viewRoles(db);
+                    mainMenu(questions, db); 
                     break;
                 case addRoleString: 
                     log("Add Role selected");
+                    addRole(db); // calls mainMenu
                     break;
                 case viewDeptString: 
                     log("view All Departents selected");
                     viewDepartments(db);
+                    mainMenu(questions, db); 
                     break;
                 case addDeptString: 
                     log("Add Department selected");
-                    addDepartment(db);
+                    addDepartment(db); // also recalls mainMenu
                     break;  
                 case quitString: 
-                    log("Quit selected");
-                    done = true;
+                    console.log("Quitting ... "); // Used to be done = true;
                     break;                 
                 default:
                     log("Selection not found: " + ans.selection);   
             } // end switch
-            if (!done) {     // Used recursion here
-                mainMenu(questions, db);  // cant use a for loop as it never stops!
-            }
+            // if (!done) {     // Used recursion here - Must
+            //     mainMenu(questions, db);  // cant use a for loop as it never stops!
+            // }
             // fileXML += `<text x="75" y="175" fill="${ans.color}">${shape.getInitials()}</text> \n`; 
         });  // end .then(ans)
     // } // end while not done
@@ -115,35 +123,79 @@ function viewEmployees(db) {
     if (err) {
       console.log(err);
     }
-    console.log(result);
+    console.log(" ");  // avoid line break issue
+    console.table(result);
   });
 } // end viewEmployees(db)
 
 // Simple view entire role table from the db.
 function viewRoles(db) {
   db.query(`SELECT * FROM role`, (err, result) => {
-      err ? console.log(err) : console.log(result);
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(" ");  // avoids annoying line break issue (terminal doesnt come back!)
+        console.table(result);  // instead of console.log
+      }  
     });
-  } // end viewRoles(db)
+  } // end vkewRoles(db)
 
   // Simple view entire department table from the db.
   function viewDepartments(db) {
     db.query(`SELECT * FROM department`, (err, result) => {
-      err ? console.log(err) : console.log(result);
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(" ");  // avoids annoying line break issue (terminal doesnt come back!)
+        console.table(result);  // instead of console.log
+      }  
     });
   } // end viewDepartments(db)
 
-  // Add a new dept to the DB.
+
+  // Add a new role to the DB. Also re-calls mainMenu, which is terrible, 
+  // but I cant find a way around it due to .then synch issues.  Maybe await .... 
+  function addRole(db) {
+    // Now display the questions
+    const roleQuestions = getRoleQuestions(db);    
+    inq
+    .prompt(roleQuestions)
+    .then((ans) => {  
+      let queryString = `INSERT INTO role (id, title, salary, department_id)`;
+      queryString += `VALUES (008, "${ans.roleName}", "${ans.roleSalary}", "${ans.dept_id}")`;
+      log("addRole queryString is: " + queryString);
+      db.query(queryString, (err, result) => {
+        err ? console.log(err) : console.log(result);
+      }); // end db.query()
+      console.log("Done adding new role!"); 
+      // MUST put re-call to main menu here, or else synch problems!! 
+      mainMenu(getMainPrompts(), db); 
+    }); // end .then() 
+    // anything here will run *BEFRORE* the .then ... 
+  } // end addRole(db)
+
+  // Add a new dept to the DB. Also recalls mainMenu, which is terrible, 
+  // but I cant find a way arouond it due to .then synch issues.  Maybe await .... 
   function addDepartment(db) {
-    const questions = getDepartmentQuestions();    
-    const queryString = 'INSERT INTO department (id, name) VALUES (007, "Janitoring")';
-    db.query(queryString, (err, result) => {
-      err ? console.log(err) : console.log(result);
-    });
+    const deptQuestions = getDeptQuestions();    
+    inq
+    .prompt(deptQuestions)
+    .then((ans) => {  
+      const queryString = `INSERT INTO department (id, name) VALUES (008, "${ans.deptName}")`;
+      log("addDepart queryString is: " + queryString);
+      db.query(queryString, (err, result) => {
+        err ? console.log(err) : console.log("Sucessfully created new department.");
+      }); // end db.query()
+      console.log("Done adding new dept!"); 
+      // MUST put re-call to main menu here, or else synch problems!! 
+      mainMenu(getMainPrompts(), db); 
+    }); // end .then() 
+    // anything here will run *BEFORE* the .then ... so we cant re-call mainMenu here ... 
   } // end addDepartment(db)
 
+//------------------------------
 // Init Menus and Questions - Inquirer prompts 
-  function initQuestions() {
+  function getMainPrompts() {
     // Create main menu array of selection - Only one select from list here
     const questions = [
         // {   type: 'input', message: 'Please select a function:', name: 'funct',        },
@@ -155,13 +207,62 @@ function viewRoles(db) {
                                         quitString],        }, 
     ];
   return  questions;
-} // end initQuestions  
+} // end getMainPrompts  
 
-// Create questions for adding a new dept MJS 2.15.24
+// Create questions for adding a new employee. MJS 2.15.24
+function getEmployeeQuestions() {
+  // Create new employee prompts - first, last, roleId, managerId
+      const questions = [
+        {   type: 'input', message: 'Enter new employee first name', name: 'firstName', }, 
+        {   type: 'input', message: 'Enter last Name', name: 'roleSalary', }, 
+        {   type: 'input', message: 'Enter roleId', name: 'roleId', }, 
+        {   type: 'input', message: 'Enter manager id', name: 'managerId', }
+      ];
+    return  questions;
+} // end getRoleQuestions
+
+// Create questions for adding a new role. MJS 2.15.24
+function getRoleQuestions(db) {
+    // gather the role names and IDs from the DB
+    // Acccording to stackOverflow, this requries a callback method being passed it. 
+    // My strong suggestion is to REQUIRE everyone to use await, as the alternative 
+    // is extremely painful. 
+    // let queryString = `SELECT id, name FROM department`;
+    // log("addRole get depts queryString is: " + queryString);
+    // let deptResults = []; 
+    // db.query(queryString, (err, result) => {
+    //  if (err) {
+    //    console.log(err);
+    //    return [];
+    //  } else {
+    //    log("AddRole get depts query worked! Found " + result.length);
+    //    log(result);
+    //    deptResults = [{"id": 3, "name": "bob"}]; // result;
+    //    return result; 
+    //  }
+    // }); // end db.query() - can't return anything from this inner method. Arghhh.
+    // let choicesStr = "";
+    // for (const i=0; i < deptResults.length; i++) {
+    //  dept = deptResults[i];
+    //  log("Id " + dept.id + " dept.name " + dept.name);
+    //  choicesStr += dept.name + ", "; 
+    // } // end getRoleQuestions
+
+    // Create new role prompts
+      const questions = [
+        {   type: 'input', message: 'Enter new role title', name: 'roleName', }, 
+        {   type: 'input', message: 'Enter new role salary', name: 'roleSalary', }, 
+        // {   type: 'rawlist', message: 'Please select department:', name: 'selection', 
+        // default: '1', choices: [choicesStr],        }
+        {   type: 'input', message: 'Enter new role dept', name: 'dept_id', }
+      ];
+    return  questions;
+} // end getRoleQuestions
+
+// Create questions for adding a new dept. Name (title), Salary, Dept MJS 2.15.24
 function getDeptQuestions() {
-    // Create main menu array of selection - Only one select from list here
         const questions = [
-            {   type: 'input', message: 'Enter new department name', name: 'deptName', }
+          {   type: 'input', message: 'Enter new department name: ', name: 'deptName', }
         ];
       return  questions;
 } // end addDeptQuestions
