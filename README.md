@@ -2,11 +2,11 @@
 uri bootcamp HW 12 SQL Employee Tracker MJS 2.15.24
 Michael Sheliga - This repo is for the University of Richmond (URI) coding bootcamp.   
 
-## Link to Repo, Screenshot(s) and/or Video(s)
+## Link to Repo, Screenshot(s) and/or Video(s)  
 Link to GitHub Repo: https://github.com/msheliga1/uriHW12SQLEmpTracker    
 <!---  Link to deployed github.io site. https://msheliga1.github.io/uriHW9NodeReadmeGen --->  
 <!-- Link to logo.svg: https://github.com/msheliga1/uriHW10OOPLogoGenerator/blob/main/examples/logo.svg  --->  
-Link to Video on Google Drive: https://drive.google.com/file/d/1NqSNz5vp7zit4KaUKGl09QM4u58gx9wA/view
+Link to Video on Google Drive: https://drive.google.com/file/d/1NqSNz5vp7zit4KaUKGl09QM4u58gx9wA/view  
 <!-- Link to Video on GitHub [Link](./examples/hw10LogoGenSheliga.webm)   Note that this video may be too large to play in GitHub, so you will need to download and play from your computer. WindowsMediaPlayer worked for me.  -->
 
 [Link to Acceptance Criteria ](#acceptance-criteria)   
