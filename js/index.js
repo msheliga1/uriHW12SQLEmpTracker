@@ -1,8 +1,10 @@
 // MJS URI HW 12 2.15.24 - from HW 10 SVG Logo generator - using inquirier
-// Include packages needed for this app
+// Include packages needed for this app.  
+// See Act 13-10 (taught after this was due!) for async, await. 
 const fs = require('fs');
 const inq = require('inquirer');
 const mysql = require('mysql2');
+const uuid = require('./uuid'); // for primary key
 require('dotenv').config();
 
 // String constants - used in both prompt and checking for selection
@@ -115,6 +117,7 @@ function mainMenu(questions, db) {
 } // end function mainMenu
 
 // ========== SQL Routines ================
+// ---------- VIEW Routes (Emp, Role, Dept) ----------------
 // Simple view entire employee table from the db.
 function viewEmployees(db) {
   // db2 = myCreateConnection(); // FIXED! Missing Recursive Param. Was cant use db more than once => recreate
@@ -140,6 +143,7 @@ function viewRoles(db) {
     });
   } // end vkewRoles(db)
 
+
   // Simple view entire department table from the db.
   function viewDepartments(db) {
     db.query(`SELECT * FROM department`, (err, result) => {
@@ -152,36 +156,18 @@ function viewRoles(db) {
     });
   } // end viewDepartments(db)
 
-
-  // Add a new role to the DB. Also re-calls mainMenu, which is terrible, 
-  // but I cant find a way around it due to .then synch issues.  Maybe await .... 
-  function addRole(db) {
-    // Now display the questions
-    const roleQuestions = getRoleQuestions(db);    
-    inq
-    .prompt(roleQuestions)
-    .then((ans) => {  
-      let queryString = `INSERT INTO role (id, title, salary, department_id)`;
-      queryString += `VALUES (008, "${ans.roleName}", "${ans.roleSalary}", "${ans.dept_id}")`;
-      log("addRole queryString is: " + queryString);
-      db.query(queryString, (err, result) => {
-        err ? console.log(err) : console.log(result);
-      }); // end db.query()
-      console.log("Done adding new role!"); 
-      // MUST put re-call to main menu here, or else synch problems!! 
-      mainMenu(getMainPrompts(), db); 
-    }); // end .then() 
-    // anything here will run *BEFRORE* the .then ... 
-  } // end addRole(db)
-
-  // Add a new dept to the DB. Also recalls mainMenu, which is terrible, 
+  // ------------ ADD Routes (Dept, Role, Emp) ---------------
+  // Add a new dept to the DB. Easy since dept does NOT pt to any other table. (No FK). 
+  // Also recalls mainMenu, which is terrible, 
   // but I cant find a way arouond it due to .then synch issues.  Maybe await .... 
-  function addDepartment(db) {
+  async function addDepartment(db) {
+    console.log("Starting add dept"); 
     const deptQuestions = getDeptQuestions();    
     inq
     .prompt(deptQuestions)
     .then((ans) => {  
-      const queryString = `INSERT INTO department (id, name) VALUES (008, "${ans.deptName}")`;
+      /* const queryString = `INSERT INTO department (id, name) VALUES ("` + uuid() + `", "${ans.deptName}")`; */ 
+      const queryString = `INSERT INTO department (name) VALUES ("${ans.deptName}")`;
       log("addDepart queryString is: " + queryString);
       db.query(queryString, (err, result) => {
         err ? console.log(err) : console.log("Sucessfully created new department.");
@@ -192,6 +178,45 @@ function viewRoles(db) {
     }); // end .then() 
     // anything here will run *BEFORE* the .then ... so we cant re-call mainMenu here ... 
   } // end addDepartment(db)
+
+  function addDepartmentThen(db) {
+    const deptQuestions = getDeptQuestions();    
+    inq
+    .prompt(deptQuestions)
+    .then((ans) => {  
+      const queryString = `INSERT INTO department (id, name) VALUES ("` + uuid() + `", "${ans.deptName}")`;
+      log("addDepart queryString is: " + queryString);
+      db.query(queryString, (err, result) => {
+        err ? console.log(err) : console.log("Sucessfully created new department.");
+      }); // end db.query()
+      console.log("Done adding new dept!"); 
+      // MUST put re-call to main menu here, or else synch problems!! 
+      mainMenu(getMainPrompts(), db); 
+    }); // end .then() 
+    // anything here will run *BEFORE* the .then ... so we cant re-call mainMenu here ... 
+  } // end addDepartmentThen(db)
+
+  // Add a new role to the DB. A role pts to a dept. 
+  // Also re-calls mainMenu, which is terrible, 
+  // but I cant find a way around it due to .then synch issues.  Maybe await .... 
+  function addRole(db) {
+    // Now display the questions  
+    const roleQuestions = getRoleQuestionsSimp(db);    
+    inq
+    .prompt(roleQuestions)
+    .then((ans) => {  
+      let queryString = `INSERT INTO role (id, title, salary, department_id)`;
+      queryString += `VALUES ("` + uuid() + `", "${ans.roleName}", "${ans.roleSalary}", "${ans.dept_id}")`;
+      log("addRole queryString is: " + queryString);
+      db.query(queryString, (err, result) => {
+        err ? console.log(err) : console.log(result);
+      }); // end db.query()
+      console.log("Done adding new role!"); 
+      // MUST put re-call to main menu here, or else synch problems!! 
+      mainMenu(getMainPrompts(), db); 
+    }); // end .then() 
+    // anything here will run *BEFRORE* the .then ... 
+  } // end addRole(db)
 
 //------------------------------
 // Init Menus and Questions - Inquirer prompts 
@@ -219,36 +244,71 @@ function getEmployeeQuestions() {
         {   type: 'input', message: 'Enter manager id', name: 'managerId', }
       ];
     return  questions;
-} // end getRoleQuestions
+} // end getEmployeeQuestions
+
+// Create questions for adding a new role. MJS 2.15.24. MJS 4.28.24 
+/* From SO async function dbCall(sql, arg) {
+      let data = await db.query(sql, arg);
+      console.log(data);
+      data = data[0];
+      return data;    } */
+/* async function dbCall() {
+    let data = await db.query(userSQL, username);
+    console.log(data);
+} */  
+async function getRoleQuestionsSimp(db) {
+  // gather the role names and IDs from the DB
+  // Acccording to stackOverflow, this requries a callback method being passed it. 
+  // My strong suggestion is to REQUIRE everyone to use await, as the alternative is much harder. 
+  let queryString = `SELECT id, name FROM department`;
+  // log("addRole get depts queryString is: " + queryString);
+/*    let args = null; 
+    let deptResults = []; 
+    let data =  await db.query(queryString, args); 
+    console.log(queryString, data);  */
+    return "getRoleQuestionSimp Return goes here"; 
+    /*
+      (err, result) => {
+      if (err) {
+        console.log(err);
+        return [];
+      } else {
+        log("AddRole get depts query worked! Found " + result.length);
+        log(result);
+        deptResults = [{"id": 3, "name": "bob"}]; // result;
+        return result; 
+      } // end if err else 
+    }); // end db.query() - can't return anything from this inner method. Arghhh. */ 
+
+} // end getRoleQuestionsSimp
 
 // Create questions for adding a new role. MJS 2.15.24
-function getRoleQuestions(db) {
+/* async function getRoleQuestions(db) {
     // gather the role names and IDs from the DB
     // Acccording to stackOverflow, this requries a callback method being passed it. 
-    // My strong suggestion is to REQUIRE everyone to use await, as the alternative 
-    // is extremely painful. 
-    // let queryString = `SELECT id, name FROM department`;
+    // My strong suggestion is to REQUIRE everyone to use await, as the alternative is extremely painful. 
+       let queryString = `SELECT id, name FROM department`;
     // log("addRole get depts queryString is: " + queryString);
-    // let deptResults = []; 
-    // db.query(queryString, (err, result) => {
-    //  if (err) {
-    //    console.log(err);
-    //    return [];
-    //  } else {
-    //    log("AddRole get depts query worked! Found " + result.length);
-    //    log(result);
-    //    deptResults = [{"id": 3, "name": "bob"}]; // result;
-    //    return result; 
-    //  }
-    // }); // end db.query() - can't return anything from this inner method. Arghhh.
-    // let choicesStr = "";
-    // for (const i=0; i < deptResults.length; i++) {
-    //  dept = deptResults[i];
-    //  log("Id " + dept.id + " dept.name " + dept.name);
-    //  choicesStr += dept.name + ", "; 
-    // } // end getRoleQuestions
+       let deptResults = []; 
+       let qr =  await db.query(queryString, (err, result) => {
+        if (err) {
+          console.log(err);
+          return [];
+        } else {
+          log("AddRole get depts query worked! Found " + result.length);
+          log(result);
+          deptResults = [{"id": 3, "name": "bob"}]; // result;
+          return result; 
+        } // end if err else 
+      }); // end db.query() - can't return anything from this inner method. Arghhh.
 
     // Create new role prompts
+      let choicesStr = "";
+      for (const i=0; i < deptResults.length; i++) {
+        dept = deptResults[i];
+        log("Id " + dept.id + " dept.name " + dept.name);
+        choicesStr += dept.name + ", "; 
+      } // end for 
       const questions = [
         {   type: 'input', message: 'Enter new role title', name: 'roleName', }, 
         {   type: 'input', message: 'Enter new role salary', name: 'roleSalary', }, 
@@ -256,8 +316,8 @@ function getRoleQuestions(db) {
         // default: '1', choices: [choicesStr],        }
         {   type: 'input', message: 'Enter new role dept', name: 'dept_id', }
       ];
-    return  questions;
-} // end getRoleQuestions
+      return  questions;
+} // end getRoleQuestions */ 
 
 // Create questions for adding a new dept. Name (title), Salary, Dept MJS 2.15.24
 function getDeptQuestions() {
