@@ -83,7 +83,7 @@ async function mainMenu(questions, db) {
                     break;
                 case addRoleString: 
                     log("Add Role selected");
-                    addRole(db); 
+                    await addRole(db); 
                     break;
                 case viewDeptString: 
                     log("view All Departents selected");
@@ -92,7 +92,7 @@ async function mainMenu(questions, db) {
                 case addDeptString: 
                     log("Add Department selected"); 
                     await addDepartment(db);  // You MUST have await here to avoid synch issue
-                    log("Added dept ... breaking from switch"); 
+                    log("Added dept ... looping"); 
                     break;  
                 case quitString: 
                     console.log("Quitting ... "); // Used to be done = true;
@@ -182,18 +182,19 @@ function viewRoles(db) {
   // Add a new role to the DB. A role pts to a dept. 
   // Also re-calls mainMenu, which is terrible, 
   // but I cant find a way around it due to .then synch issues.  Maybe await .... 
-  function addRole(db) { 
+  async function addRole(db) { 
     log("Starting addRole ... "); 
     // Now display the questions  
-    const roleQuestions = getRoleQuestions(db);    
-    const ans = inq.prompt(roleQuestions)
-      let queryString = `INSERT INTO role (id, title, salary, department_id)`;
-      queryString += `VALUES ("` + uuid() + `", "${ans.roleName}", "${ans.roleSalary}", "${ans.dept_id}")`;
-      log("addRole queryString is: " + queryString);
-      db.query(queryString, (err, result) => {
+    const roleQuestions = await getRoleQuestions(db);   // need await here. 
+    log("Role questions: ", roleQuestions); 
+    const ans = await inq.prompt(roleQuestions)
+    let queryString = `INSERT INTO role (title, salary, department_id)`;
+    queryString += `VALUES ("${ans.roleName}", "${ans.roleSalary}", "${ans.dept_id}")`;
+    log("addRole queryString is: " + queryString);
+    db.query(queryString, (err, result) => {
         err ? console.log(err) : console.log(result);
-      }); // end db.query()
-      console.log("Done adding new role!"); 
+    }); // end db.query()
+    console.log("Done adding new role!"); 
   } // end addRole(db)
 
 //------------------------------
@@ -242,13 +243,9 @@ async function getRoleQuestions(db) {
   // My strong suggestion is to REQUIRE everyone to use await, as the alternative is much harder. 
   let queryString = `SELECT id, name FROM department`;
   // log("addRole get depts queryString is: " + queryString);
-/*    let args = null; 
+    let args = null; 
     let deptResults = []; 
-    let data =  db.query(queryString, args); 
-    console.log(queryString, data);  */
-    return "getRoleQuestionSimp Return goes here"; 
-    /*
-      (err, result) => {
+    db.query(queryString, (err, result) => {
       if (err) {
         console.log(err);
         return [];
@@ -256,10 +253,18 @@ async function getRoleQuestions(db) {
         log("AddRole get depts query worked! Found " + result.length);
         log(result);
         deptResults = [{"id": 3, "name": "bob"}]; // result;
-        return result; 
       } // end if err else 
-    }); // end db.query() - can't return anything from this inner method. Arghhh. */ 
-} // end getRoleQuestions
+    }); // end db.query() - can't return anything from this inner method. Arghhh.
+    const questions = [
+      {   type: 'input', message: 'Enter new role title', name: 'roleName', }, 
+      {   type: 'input', message: 'Enter new role salary', name: 'roleSalary', }, 
+      // {   type: 'rawlist', message: 'Please select department:', name: 'selection', 
+      // default: '1', choices: [choicesStr],        }
+      {   type: 'input', message: 'Enter new role dept', name: 'dept_id', }
+    ];
+    return  questions; 
+
+  } // end getRoleQuestions
 
 // Create questions for adding a new role. MJS 2.15.24
 /* async function getRoleQuestionsOrig(db) {
