@@ -41,6 +41,19 @@ Use node, inquirer and SQL to create an 3 table employee-role-department databas
     NPM: Do "npm init --y" BEFORE "npm install" to avoide ENOENT err.
          Do "npm install inquirer@8.2.4" (with old version) to avoid require error.
          Do "npm install mySQL2" 
+    MySQL: mysql -u root -p 
+        source db\schema.sql, source db\seeds.sql  (Note back-slash and must include .sql)
+        use biz_db;   show tables;  and select * from tables; 
+    Run app: node js/index.js
+
+    View: 
+        Department - Works
+        Roles (pt to depts) - works
+        Emps (pt to roles) - works
+    Add: 
+        Dept - Need to correct id. Try auto-increment. 
+        Roles - Needs to display menu of depts, not just ask for a "role" 
+
     Commit and push files back to gitHub/branch. (For multi-programming: Issue pull request, approve, merge).  
     Deploy code (Settings...CodeAndAnimation->Pages on left, GitHub Pages->Branch->main, save)  
         - Deployed code name always msheliga1/github.io/RepoName !!  
@@ -50,6 +63,7 @@ Use node, inquirer and SQL to create an 3 table employee-role-department databas
 ## Tools and Technologies Used   
     Github - Branches not needed, but could use.  
         - GitIgnore to keep NPM libraries out of gitHub repo.  
+    Inquirer - Allows for simple prompts and user inputs. 0
     NPM - Node Package Manager  
         fs - fileSystem    
         inquirer - Used for prompts (text, list, checkboxes, editor, etc.)   
