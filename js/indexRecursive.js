@@ -28,9 +28,11 @@ function init() {
   const questions = getMainPrompts(); 
   // Connect to database
   const db = myCreateConnection();
+
   // viewEmployees(db);  // this seems to work!
   // viewRoles(db); 
   // viewDepartments(db);  
+
   mainMenu(questions, db)
 } // end function init
 
@@ -54,55 +56,114 @@ function myCreateConnection() {
 // but works repeatedly if done before inquirer prompts!
 // end function createDB
 
+
 // ====== All Menu Methods Next =========================
 // main inquirer .prompt routine. MJS 2.15.24
-async function mainMenu(questions, db) {
+function mainMenu(questions, db) {
+  let done = false;
+  let count = 0; 
+  while (!done && (count < 10)) { 
+      count++; 
+      ans = inq.prompt(questions)
+      // display or modify the db..
+          log("Beginning .then " + count + " ... Answer selection is " + ans.selection);
+          switch (ans.selection) { 
+              case viewEmpString: 
+                  log("view All Employees selected");
+                  viewEmployees(db);
+                  break;
+              case addEmpString: 
+                  log("Add Employee selected");
+                  console.log("Not Yet Implemented");
+                  break;
+              case updateEmpRoleString: 
+                  log("Update Employee Role selected.");
+                  console.log("Not Yet Implemented");
+                  break;
+              case viewRoleString: 
+                  log("view All Roles selected");
+                  viewRoles(db);
+                  break;
+              case addRoleString: 
+                  log("Add Role selected");
+                  addRole(db); // calls mainMenu
+                  break;
+              case viewDeptString: 
+                  log("view All Departents selected");
+                  viewDepartments(db);
+                  break;
+              case addDeptString: 
+                  log("Add Department selected");
+                  addDepartment(db); // also recalls mainMenu
+                  break;  
+              case quitString: 
+                  log("Quitting ... "); // Used to be done = true;
+                  done = true; 
+                  break;                 
+              default:
+                  log("Selection not found: " + ans.selection);   
+          } // end switch
+  // } // end while not done and count < maxCounts
+} // end function mainMenu
+
+// ====== All Menu Methods Next =========================
+// main inquirer .prompt routine. MJS 2.15.24
+function mainMenuRecursive(questions, db) {
     let done = false;
     let count = 0; 
-    while (!done && (count < 10)) { 
+    // while (!done && (count < 10)) { 
         count++; 
-        log("Runinng iteration ", count, " with questions ", questions); 
-        const ans = await inq.prompt(questions)
+        inq
+        .prompt(questions)
+        .then((ans) => {  // display or modify the db..
             log("Beginning .then " + count + " ... Answer selection is " + ans.selection);
             switch (ans.selection) { 
                 case viewEmpString: 
                     log("view All Employees selected");
-                    await viewEmployees(db);
+                    viewEmployees(db);
+                    mainMenu(questions, db); 
                     break;
                 case addEmpString: 
                     log("Add Employee selected");
                     console.log("Not Yet Implemented");
+                    mainMenu(questions, db); 
                     break;
                 case updateEmpRoleString: 
                     log("Update Employee Role selected.");
                     console.log("Not Yet Implemented");
+                    mainMenu(questions, db); 
                     break;
                 case viewRoleString: 
                     log("view All Roles selected");
                     viewRoles(db);
+                    mainMenu(questions, db); 
                     break;
                 case addRoleString: 
                     log("Add Role selected");
-                    addRole(db); 
+                    addRole(db); // calls mainMenu
                     break;
                 case viewDeptString: 
                     log("view All Departents selected");
-                    viewDepartments(db); 
+                    viewDepartments(db);
+                    mainMenu(questions, db); 
                     break;
                 case addDeptString: 
-                    log("Add Department selected"); 
-                    await addDepartment(db);  // You MUST have await here to avoid synch issue
-                    log("Added dept ... breaking from switch"); 
+                    log("Add Department selected");
+                    addDepartment(db); // also recalls mainMenu
                     break;  
                 case quitString: 
                     console.log("Quitting ... "); // Used to be done = true;
-                    done = true; 
                     break;                 
                 default:
                     log("Selection not found: " + ans.selection);   
             } // end switch
-     } // end while not done and count < COUNT_MAX
-} // end function mainMenu
+            // if (!done) {     // Used recursion here - Must
+            //     mainMenu(questions, db);  // cant use a for loop as it never stops!
+            // }
+            // fileXML += `<text x="75" y="175" fill="${ans.color}">${shape.getInitials()}</text> \n`; 
+        });  // end .then(ans)
+    // } // end while not done
+} // end function mainMenuRecursive
 
 // ========== SQL Routines ================
 // ---------- VIEW Routes (Emp, Role, Dept) ----------------
@@ -135,7 +196,7 @@ function viewRoles(db) {
   // Simple view entire department table from the db.
   function viewDepartments(db) {
     db.query(`SELECT * FROM department`, (err, result) => {
-       if (err) {
+      if (err) {
         console.log(err);
       } else {
         console.log(" ");  // avoids annoying line break issue (terminal doesnt come back!)
@@ -146,20 +207,25 @@ function viewRoles(db) {
 
   // ------------ ADD Routes (Dept, Role, Emp) ---------------
   // Add a new dept to the DB. Easy since dept does NOT pt to any other table. (No FK). 
+  // Also recalls mainMenu, which is terrible, 
+  // but I cant find a way arouond it due to .then synch issues.  Maybe await .... 
   async function addDepartment(db) {
     console.log("Starting add dept"); 
     const deptQuestions = getDeptQuestions();    
-    console.log("Starting add dept ... ", deptQuestions); 
-    const ans = await inq.prompt(deptQuestions); 
-    console.log("Add dept ans ... ", ans); 
-
+    inq
+    .prompt(deptQuestions)
+    .then((ans) => {  
       /* const queryString = `INSERT INTO department (id, name) VALUES ("` + uuid() + `", "${ans.deptName}")`; */ 
       const queryString = `INSERT INTO department (name) VALUES ("${ans.deptName}")`;
       log("addDepart queryString is: " + queryString);
       db.query(queryString, (err, result) => {
         err ? console.log(err) : console.log("Sucessfully created new department.");
       }); // end db.query()
-      console.log("Done async-await adding new dept!"); 
+      console.log("Done adding new dept!"); 
+      // MUST put re-call to main menu here, or else synch problems!! 
+      mainMenu(getMainPrompts(), db); 
+    }); // end .then() 
+    // anything here will run *BEFORE* the .then ... so we cant re-call mainMenu here ... 
   } // end addDepartment(db)
 
   function addDepartmentThen(db) {
@@ -182,11 +248,12 @@ function viewRoles(db) {
   // Add a new role to the DB. A role pts to a dept. 
   // Also re-calls mainMenu, which is terrible, 
   // but I cant find a way around it due to .then synch issues.  Maybe await .... 
-  function addRole(db) { 
-    log("Starting addRole ... "); 
+  function addRole(db) {
     // Now display the questions  
-    const roleQuestions = getRoleQuestions(db);    
-    const ans = inq.prompt(roleQuestions)
+    const roleQuestions = getRoleQuestionsSimp(db);    
+    inq
+    .prompt(roleQuestions)
+    .then((ans) => {  
       let queryString = `INSERT INTO role (id, title, salary, department_id)`;
       queryString += `VALUES ("` + uuid() + `", "${ans.roleName}", "${ans.roleSalary}", "${ans.dept_id}")`;
       log("addRole queryString is: " + queryString);
@@ -194,6 +261,10 @@ function viewRoles(db) {
         err ? console.log(err) : console.log(result);
       }); // end db.query()
       console.log("Done adding new role!"); 
+      // MUST put re-call to main menu here, or else synch problems!! 
+      mainMenu(getMainPrompts(), db); 
+    }); // end .then() 
+    // anything here will run *BEFRORE* the .then ... 
   } // end addRole(db)
 
 //------------------------------
@@ -234,9 +305,7 @@ function getEmployeeQuestions() {
     let data = await db.query(userSQL, username);
     console.log(data);
 } */  
-
-// MJS 4.28.24 - This version of mySQL does NOT use .then for db.Query.  Hence it cant use asynch await db.query
-async function getRoleQuestions(db) { 
+async function getRoleQuestionsSimp(db) {
   // gather the role names and IDs from the DB
   // Acccording to stackOverflow, this requries a callback method being passed it. 
   // My strong suggestion is to REQUIRE everyone to use await, as the alternative is much harder. 
@@ -244,7 +313,7 @@ async function getRoleQuestions(db) {
   // log("addRole get depts queryString is: " + queryString);
 /*    let args = null; 
     let deptResults = []; 
-    let data =  db.query(queryString, args); 
+    let data =  await db.query(queryString, args); 
     console.log(queryString, data);  */
     return "getRoleQuestionSimp Return goes here"; 
     /*
@@ -259,10 +328,11 @@ async function getRoleQuestions(db) {
         return result; 
       } // end if err else 
     }); // end db.query() - can't return anything from this inner method. Arghhh. */ 
-} // end getRoleQuestions
+
+} // end getRoleQuestionsSimp
 
 // Create questions for adding a new role. MJS 2.15.24
-/* async function getRoleQuestionsOrig(db) {
+/* async function getRoleQuestions(db) {
     // gather the role names and IDs from the DB
     // Acccording to stackOverflow, this requries a callback method being passed it. 
     // My strong suggestion is to REQUIRE everyone to use await, as the alternative is extremely painful. 
@@ -296,13 +366,12 @@ async function getRoleQuestions(db) {
         {   type: 'input', message: 'Enter new role dept', name: 'dept_id', }
       ];
       return  questions;
-} // end getRoleQuestionsOrig */ 
+} // end getRoleQuestions */ 
 
 // Create questions for adding a new dept. Name (title), Salary, Dept MJS 2.15.24
 function getDeptQuestions() {
         const questions = [
-          {   message: '           Enter new department name:     ', name: 'deptName', }
-          // {   type: 'input', message: 'Enter new department name: ', name: 'deptName', }
+          {   type: 'input', message: 'Enter new department name: ', name: 'deptName', }
         ];
       return  questions;
 } // end addDeptQuestions

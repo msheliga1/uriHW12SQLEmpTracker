@@ -50,8 +50,12 @@ Use node, inquirer and SQL to create an 3 table employee-role-department databas
         Department - Works
         Roles (pt to depts) - works
         Emps (pt to roles) - works
+    Async - Await 
+        For .inq
+        For db.query 
     Add: 
-        Dept - Need to correct id. Try auto-increment. 
+        Dept - Need to correct id. Try auto-increment.  Also made name unique 
+            Works 4.28.24 
         Roles - Needs to display menu of depts, not just ask for a "role" 
 
     Commit and push files back to gitHub/branch. (For multi-programming: Issue pull request, approve, merge).  
