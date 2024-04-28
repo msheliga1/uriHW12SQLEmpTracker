@@ -6,7 +6,7 @@ USE biz_db;
 SELECT DATABASE();
 
 CREATE TABLE employee (
-    id INT NOT NULL PRIMARY KEY,
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     first_name VARCHAR(30) NOT NULL,
     last_name VARCHAR(30) NOT NULL, 
     role_id INT,
@@ -14,15 +14,16 @@ CREATE TABLE employee (
 );
 
 CREATE TABLE role (
-    id INT NOT NULL PRIMARY KEY, 
-    title VARCHAR(30), 
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
+    title VARCHAR(30) UNIQUE, 
     salary DECIMAL, 
     department_id INT
 );
 
+-- From Act 12-22   id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 CREATE TABLE department (
-    id INT NOT NULL PRIMARY KEY,
-    name VARCHAR(30) NOT NULL
+    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(30) NOT NULL UNIQUE
 );
 
 SHOW TABLES;
