@@ -237,14 +237,15 @@ function getEmployeeQuestions() {
 } */  
 
 // MJS 4.28.24 - This version of mySQL does NOT use .then for db.Query.  Hence it cant use asynch await db.query
+// You definitely need await (or .then) for inquirer.  The function that calls this function also needs await. 
 async function getRoleQuestions(db) { 
-  // gather the role names and IDs from the DB
+  // Gather the role names and IDs from the DB
   // Acccording to stackOverflow, this requries a callback method being passed it. 
   // My strong suggestion is to REQUIRE everyone to use await, as the alternative is much harder. 
   let queryString = `SELECT id, name FROM department`;
   // log("addRole get depts queryString is: " + queryString);
     let args = null; 
-    let deptResults = []; 
+    let choiceStr = 'xx '; 
     db.query(queryString, (err, result) => {
       if (err) {
         console.log(err);
@@ -252,14 +253,22 @@ async function getRoleQuestions(db) {
       } else {
         log("AddRole get depts query worked! Found " + result.length);
         log(result);
-        deptResults = [{"id": 3, "name": "bob"}]; // result;
+        for (let i=0; i < result.length; i++) {
+          res = result[i]; 
+          if (i !== 0) {choiceStr += ', '}; 
+          choiceStr += ("" + res.id + " - " + res.name);
+        }
+        log("ChoiceStr is ", choiceStr); 
       } // end if err else 
     }); // end db.query() - can't return anything from this inner method. Arghhh.
+
+    console.log("ChoiceStr after query is ", choiceStr); 
     const questions = [
       {   type: 'input', message: 'Enter new role title', name: 'roleName', }, 
       {   type: 'input', message: 'Enter new role salary', name: 'roleSalary', }, 
-      // {   type: 'rawlist', message: 'Please select department:', name: 'selection', 
-      // default: '1', choices: [choicesStr],        }
+      // rawlist => numbered list. (plain list has no numbers)
+      {   type: 'rawlist', message: 'Please select department:', name: 'selection', 
+          default: '1', choices: [`{choicesStr}`],    }, 
       {   type: 'input', message: 'Enter new role dept', name: 'dept_id', }
     ];
     return  questions; 
@@ -268,7 +277,7 @@ async function getRoleQuestions(db) {
 
 // Create questions for adding a new role. MJS 2.15.24
 /* async function getRoleQuestionsOrig(db) {
-    // gather the role names and IDs from the DB
+    // Gather the role names and IDs from the DB
     // Acccording to stackOverflow, this requries a callback method being passed it. 
     // My strong suggestion is to REQUIRE everyone to use await, as the alternative is extremely painful. 
        let queryString = `SELECT id, name FROM department`;
