@@ -1,6 +1,7 @@
 // MJS URI HW 12 2.15.24 - from HW 10 SVG Logo generator - using inquirier
 // Include packages needed for this app.  
 // See Act 13-10 (taught after this was due!) for async, await. 
+// db.query starts in act 12-22. Generally in server.js files. 
 const fs = require('fs');
 const inq = require('inquirer');
 const mysql = require('mysql2');
@@ -50,7 +51,7 @@ function myCreateConnection() {
     return db; 
 } // end function myCreateConnection
 
-// Create the db link ... db.query fails if done mor than once interactively inside inquirer
+// Create the db link ... db.query fails if done more than once interactively inside inquirer
 // but works repeatedly if done before inquirer prompts!
 // end function createDB
 
@@ -63,7 +64,7 @@ async function mainMenu(questions, db) {
         count++; 
         log("Runinng iteration ", count, " with questions ", questions); 
         const ans = await inq.prompt(questions)
-            log("Beginning .then " + count + " ... Answer selection is " + ans.selection);
+        log("Got prompt ans" + count + " ... Answer selection is " + ans.selection);
             switch (ans.selection) { 
                 case viewEmpString: 
                     log("view All Employees selected");
@@ -82,8 +83,12 @@ async function mainMenu(questions, db) {
                     viewRoles(db);
                     break;
                 case addRoleString: 
-                    log("Add Role selected");
-                    await addRole(db); 
+                    log("Add Role selected");  // first value below for params
+                    await getDeptResults(null, db, 
+                      function(resultSet) {
+                        console.log("getDept resultSet length: ", resultSet.length);
+                        addRole(db, resultSet); 
+                      });  
                     break;
                 case viewDeptString: 
                     log("view All Departents selected");
@@ -130,7 +135,6 @@ function viewRoles(db) {
       }  
     });
   } // end vkewRoles(db)
-
 
   // Simple view entire department table from the db.
   function viewDepartments(db) {
@@ -179,17 +183,17 @@ function viewRoles(db) {
     // anything here will run *BEFORE* the .then ... so we cant re-call mainMenu here ... 
   } // end addDepartmentThen(db)
 
-  // Add a new role to the DB. A role pts to a dept. 
-  // Also re-calls mainMenu, which is terrible, 
+  // Add a new role to the DB. A role pts to a dept, so this is harder.  
   // but I cant find a way around it due to .then synch issues.  Maybe await .... 
-  async function addRole(db) { 
+  async function addRole(db, resultSet) { 
     log("Starting addRole ... "); 
     // Now display the questions  
-    const roleQuestions = await getRoleQuestions(db);   // need await here. 
+    const roleQuestions = await getRoleQuestions(resultSet);   // need await here. 
     log("Role questions: ", roleQuestions); 
-    const ans = await inq.prompt(roleQuestions)
+    const ans = await inq.prompt(roleQuestions); 
+    const dept_id = ans.dept_string.split("-")[0]; 
     let queryString = `INSERT INTO role (title, salary, department_id)`;
-    queryString += `VALUES ("${ans.roleName}", "${ans.roleSalary}", "${ans.dept_id}")`;
+    queryString += `VALUES ("${ans.roleName}", "${ans.roleSalary}", "${dept_id}" )`;
     log("addRole queryString is: " + queryString);
     db.query(queryString, (err, result) => {
         err ? console.log(err) : console.log(result);
@@ -226,7 +230,8 @@ function getEmployeeQuestions() {
 } // end getEmployeeQuestions
 
 // Create questions for adding a new role. MJS 2.15.24. MJS 4.28.24 
-/* From SO async function dbCall(sql, arg) {
+// From SO stackoverflow.com/questions/31875621/how-to-properly-return-a-result-from-mysql-with-node
+/* dbCall(sql, arg) {
       let data = await db.query(sql, arg);
       console.log(data);
       data = data[0];
@@ -236,9 +241,47 @@ function getEmployeeQuestions() {
     console.log(data);
 } */  
 
+// MJS 4.28.24 - Given a result set of dept names and ids, produce inquirer role questions. 
+// The function that calls this function also needs await. 
+// db.query examples start in 12-22 generally in server.js. 
+async function getRoleQuestions(resultSet) { 
+    // Gather the role names and IDs from the resultSet
+      let choiceStr = 'MJS '; 
+      let choicesArray = []; 
+      console.log("AddRoleQuestions input resultSet length " + resultSet.length);
+      console.log(resultSet);
+      for (let i=0; i < resultSet.length; i++) {
+            res = resultSet[i]; 
+            if (i !== 0) {choiceStr += ', '}; 
+            choiceStr += ("" + res.id + " - " + res.name);
+            choicesArray.push("" + res.id + " - " + res.name); 
+      }
+      console.log("ChoiceStr is " + choiceStr); 
+      console.log("ChoicesArray.length is " + choicesArray.length); 
+      console.log("ChoicesArray[0] is ", choicesArray[0]); 
+      const choiceArr2 = ["1-Accounting", "2-Engineering", "3-Financing", "4-Maintainence"]; 
+      const questions = [
+        {   type: 'input', message: 'Enter new role title', name: 'roleName', }, 
+        {   type: 'input', message: 'Enter new role salary', name: 'roleSalary', }, 
+        // rawlist => numbered list. (plain list has no numbers)
+        {   type: 'rawlist', message: 'Please select department:', name: 'dept_string', 
+            default: '1', choices: choicesArray,  }, 
+        // {   type: 'input', message: 'Enter new role dept', name: 'dept_id', }
+      ];
+      return  questions; 
+    } // end getRoleQuestions
+
 // MJS 4.28.24 - This version of mySQL does NOT use .then for db.Query.  Hence it cant use asynch await db.query
 // You definitely need await (or .then) for inquirer.  The function that calls this function also needs await. 
-async function getRoleQuestions(db) { 
+// db.query examples start in 12-22 generally in server.js. 
+async function getRoleQuestionsOld(db, resultSet) { 
+
+// SO usage
+/* const parm = null; 
+getDeptResults(parm, db, function(returnVal) {
+  console.log("getRoleQs ", returnVal.length); 
+}); */ 
+
   // Gather the role names and IDs from the DB
   // Acccording to stackOverflow, this requries a callback method being passed it. 
   // My strong suggestion is to REQUIRE everyone to use await, as the alternative is much harder. 
@@ -246,7 +289,8 @@ async function getRoleQuestions(db) {
   // log("addRole get depts queryString is: " + queryString);
     let args = null; 
     let choiceStr = 'xx '; 
-    db.query(queryString, (err, result) => {
+    let choicesArray = []; 
+    db.query(queryString, async (err, result) => { 
       if (err) {
         console.log(err);
         return [];
@@ -257,23 +301,53 @@ async function getRoleQuestions(db) {
           res = result[i]; 
           if (i !== 0) {choiceStr += ', '}; 
           choiceStr += ("" + res.id + " - " + res.name);
+          choicesArray.push("" + res.id + " - " + res.name); 
         }
-        log("ChoiceStr is ", choiceStr); 
+        log("ChoiceStr is " + choiceStr); 
+        log("ChoicesArray.length is " + choicesArray.length); 
       } // end if err else 
     }); // end db.query() - can't return anything from this inner method. Arghhh.
 
     console.log("ChoiceStr after query is ", choiceStr); 
+    console.log("ChoicesArray.length after query is ", choicesArray.length); 
+    console.log("ChoicesArray[0] after query is ", choicesArray[0]); 
+    const choiceArr2 = ["1-Accounting", "2-Engineering", "3-Financing", "4-Maintainence"]; 
     const questions = [
       {   type: 'input', message: 'Enter new role title', name: 'roleName', }, 
       {   type: 'input', message: 'Enter new role salary', name: 'roleSalary', }, 
       // rawlist => numbered list. (plain list has no numbers)
-      {   type: 'rawlist', message: 'Please select department:', name: 'selection', 
-          default: '1', choices: [`{choicesStr}`],    }, 
+      {   type: 'rawlist', message: 'Please select department:', name: 'dept_list', 
+          default: '1', choices: choiceArr2,  }, 
       {   type: 'input', message: 'Enter new role dept', name: 'dept_id', }
     ];
     return  questions; 
+  } // end getRoleQuestionsOld
 
-  } // end getRoleQuestions
+  // From 12-28. db.query starts in 12-22. Nearly all code in server.js files. 
+  // Only example where the result of a query seems to get retunned. 
+  // Read all movies
+/* app.get('/api/movies', (req, res) => {
+  const sql = `SELECT id, movie_name AS title FROM movies`;  
+  db.query(sql, (err, rows) => {
+    if (err) {
+      res.status(500).json({ error: err.message });
+      return;
+    }
+    res.json({  message: 'success',  data: rows });
+  });
+}); */  
+
+// From SO 
+function getDeptResults(data, db, callback) {   
+  const sql = `SELECT id, name FROM department`;
+  db.query(sql, function(err, results) {
+        if (err) { throw err; }
+        console.log("Got Dept results. Number of Results: ", results.length); // good
+        return callback(results);  // Scope is larger than function
+})
+} // end getDeptResults 
+
+
 
 // Create questions for adding a new role. MJS 2.15.24
 /* async function getRoleQuestionsOrig(db) {
