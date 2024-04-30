@@ -89,9 +89,6 @@ async function mainMenu(questions, db) {
                     break;
                 case viewDeptString: 
                     log("view All Departents selected.");
-                    log("Andrew1. db.query => invoked await on non-promise. Try con.promise().query ... ");
-                    resSet = await getDBResultSetAndrew1(null, db); 
-                    break; 
                     viewDepartments(db); 
                     break;
                 case addDeptString: 
@@ -226,25 +223,26 @@ function viewRoles(db) {
   // Add an employee to the DB. An emp pts to a role and manager so this is harder. .  
   // Need to get 2 result sets, generate inquirer prompt, prompt user and add new employee. 
   async function addEmployee(db) { 
-    log("Starting addEmp ... "); 
-    // const sql = "SELECT id, title FROM role";
-    // const sql = "SELECT * FROM role";
-    const sql = `SELECT id, name FROM department`;
-    const empResSet = await getDBResultSet(db, sql);  
-    console.log("Emp result set ", empResSet); 
-    return; 
-    const inqQuestions = await getEmpQuestions(empResSet);   // need await here. 
+    log("Starting addEmployee ... "); 
+    const sql = `SELECT id, title FROM role`;
+    const roleResSet = await getDBResultSet(db, sql);  
+    log("Role result set " + roleResSet); 
+    const sql2 = `SELECT id, first_name, last_name FROM employee`;
+    const empResSet = await getDBResultSet(db, sql2);  
+    log("Emp result set " + empResSet); 
+    const inqQuestions = await getEmpQuestions(roleResSet, empResSet);   // need await here. 
     log("Employee questions: " + inqQuestions); 
-    // Now display the questions  
+    // Now display the questions using inquirer.   
     const ans = await inq.prompt(inqQuestions); 
-    const dept_id = ans.dept_string.split("-")[0]; 
-    let queryString = `INSERT INTO role (title, salary, department_id)`;
-    queryString += `VALUES ("${ans.roleName}", "${ans.roleSalary}", "${dept_id}" )`;
-    log("addRole queryString is: " + queryString);
+    const role_id = ans.role_string.split("-")[0]; 
+    const manager_id = ans.manager_string.split("-")[0]; 
+    let queryString = `INSERT INTO employee (first_name, last_name, role_id, manager_id) `;
+    queryString += `VALUES ("${ans.firstName}", "${ans.lastName}", "${role_id}",  "${manager_id}" )`;
+    log("addEmployee queryString is: " + queryString);
     db.query(queryString, (err, result) => {
-        err ? console.log(err) : console.log(result);
+        err ? console.log("addEmployee " + err) : console.log("SUCCESS - " + queryString);
     }); // end db.query()
-    console.log("Done adding new role!"); 
+    log("Done adding new employee!"); 
   } // end addRole(resultSet)
 
 //------------------------------
@@ -263,7 +261,8 @@ function viewRoles(db) {
   return  questions;
 } // end getMainPrompts  
 
-// Create questions for adding a new employee. MJS 2.15.24
+// Create questions for adding a new employee. MJS 2.15.24 MJS 4.30.24
+// Method no longer used. Superseded by getEmpQuestions
 function getEmployeeQuestions() {
   // Create new employee prompts - first, last, roleId, managerId
       const questions = [
@@ -315,7 +314,44 @@ async function getRoleQuestions(resultSet) {
         // {   type: 'input', message: 'Enter new role dept', name: 'dept_id', }
       ];
       return  questions; 
-    } // end getRoleQuestions
+} // end getRoleQuestions
+
+// The function that calls this function also needs await. 
+// db.query examples start in 12-22 generally in server.js. 
+async function getEmpQuestions(resultSetRole, resultSetEmp) { 
+    // Gather the role names and IDs from the resultSet
+    let choicesArray = []; 
+    console.log("AddEmpQuestions input role resultSet length " + resultSetRole.length);
+    log("AddEmpQuestions role result set: ");
+    log(resultSetRole); 
+    for (let i=0; i < resultSetRole.length; i++) {
+          res = resultSetRole[i]; 
+          choicesArray.push("" + res.id + " - " + res.title); 
+    }
+    log("ChoicesArray.length is " + choicesArray.length); 
+    if (choicesArray[0]) {log("ChoicesArray[0] is " + choicesArray[0]);} 
+    // Gather the employee (potential manager) names from Employee result set. 
+    let empArray = []; 
+    console.log("AddEmpQuestions input employee resultSet length " + resultSetEmp.length);
+    log("AddEmpQuestions employee result set: ");
+    log(resultSetEmp); 
+    for (let i=0; i < resultSetEmp.length; i++) {
+          res = resultSetEmp[i]; 
+          empArray.push("" + res.id + " - " + res.first_name + " " + res.last_name); 
+    }
+    log("EmployeeArray.length is " + empArray.length); 
+    if (empArray[0]) {log("EmployeeArray[0] is " + empArray[0]);} 
+    const questions = [
+      {   type: 'input', message: 'Enter new employee first name:', name: 'firstName', }, 
+      {   type: 'input', message: 'Enter new employee last name:', name: 'lastName', }, 
+      // rawlist => numbered list. (plain list has no numbers)
+      {   type: 'rawlist', message: 'Please select role:', name: 'role_string', 
+          default: '1', choices: choicesArray,  }, 
+      {   type: 'rawlist', message: 'Please select manager:', name: 'manager_string', 
+          default: '1', choices: empArray,  }, 
+    ];
+    return  questions; 
+} // end getEmpQuestions
 
 // MJS 4.28.24 - This version of mySQL does NOT use .then for db.Query.  Hence it cant use asynch await db.query
 // You definitely need await (or .then) for inquirer.  The function that calls this function also needs await. 
@@ -373,7 +409,7 @@ getDBResultSet(parm, db, function(returnVal) {
   // From 12-28. db.query starts in 12-22. Nearly all code in server.js files. 
   // Only example where the result of a query seems to get retunned. 
   // Read all movies
-/* app.get('/api/movies', (req, res) => {
+  /* app.get('/api/movies', (req, res) => {
   const sql = `SELECT id, movie_name AS title FROM movies`;  
   db.query(sql, (err, rows) => {
     if (err) {
@@ -384,9 +420,12 @@ getDBResultSet(parm, db, function(returnVal) {
   });
 }); */  
 
+
+// log("Andrew1. db.query => Invoked await on non-promise. Try con.promise().query ... ");
+// resSet = await getDBResultSetAndrew1(null, db); 
 async function getDBResultSetAndrew1(data, db) {   
   const sql = `SELECT id, name FROM department`;
-  // Set async function getDBResultSet .. then do awati. 
+  // Set async function getDBResultSet .. then do await. 
   let myString = "Orig string outside db.query."; 
   // Andrew suggested return db.query - Could try .then callbacks. 
   // Error msg for db.query ... suggested conn.promise().query
@@ -434,7 +473,7 @@ async function getDBResultSet(db, sql) {
   // Got rid of callback method in query(sql, callbackFunction) .... 
   // Calling routine complained result was uncompleted promise ... added await to caller -> WORKS. 
   const qresult = await db.promise().query(sql); 
-  console.log("Got query result ", qresult);  // [[resSet] [queryString]]
+  // console.log("Got query result ", qresult);  // [[resSet] [queryString]]
   const resSet = qresult[0]; 
   // console.log("Got query resultSet ", resSet);  // [[resSet] [queryString]]
   return resSet; // Per Andrew  
