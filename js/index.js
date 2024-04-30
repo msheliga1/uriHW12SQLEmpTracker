@@ -59,7 +59,7 @@ async function mainMenu(questions, db) {
     let done = false;
     let count = 0; 
     let resSet = null; 
-    while (!done && (count < 10)) { 
+    while (!done && (count < 50)) { 
         count++; 
         log("Runinng mainMenu iteration " + count); 
         const ans = await inq.prompt(questions)
@@ -134,11 +134,26 @@ function viewRoles(db) {
 // Simple view entire employee table from the db (first_name, last_name). 
 // Join with role (title, salary) and dept (names) and self (manager name). 
 // Also self join for manager name. 
+// SELECT column_name(s) FROM table1 T1, table1 T2 WHERE condition;
 function viewEmployees(db) {
   // db2 = myCreateConnection(); // FIXED! Missing Recursive Param. Was cant use db more than once => recreate
-  let sql =  `SELECT first_name, last_name, role_id, title, salary, department_id, name FROM employee `; 
-  sql += `INNER JOIN role       ON employee.role_id   = role.id ` ; 
+  // let sql =  `SELECT first_name, last_name, role_id, title, salary, department_id AS, name FROM employee `; 
+  // sql += `INNER JOIN role       ON employee.role_id   = role.id ` ; 
+  // sql += `INNER JOIN department ON role.department_id = department.id;` ; 
+  // `SELECT fields FROM emp E1, emp E2 WHERE E1.man_id = E2.id` works. 
+  // `SELECT fields FROM emp E1 INNER JOIN role `                works. 
+  // `SELECT fields FROM emp E1, emp E2 WHERE E1.man_id = E2.id INNER JOIN role ` WONT work. 
+  // Need all innner joins. 
+  sql =  `SELECT E1.first_name, E1.last_name, E1.role_id, title, salary, department_id AS dept_id, name, `; 
+  sql += `E1.manager_id as mgr_id, E2.first_name AS mgr, E2.last_name AS mgr_last `; 
+  sql += `FROM employee E1 INNER JOIN employee E2 ON E1.manager_id = E2.id `; 
+  sql += `INNER JOIN role       ON E1.role_id   = role.id ` ; 
   sql += `INNER JOIN department ON role.department_id = department.id;` ; 
+  // let sql =  `SELECT E1.first_name, E1.last_name, E1.role_id, title, salary, department_id, name, `; 
+  // sql += `E2.first_name AS mgr, E2.last_name AS mgr_last FROM employee E1, employee E2 WHERE E1.manager_id = E2.id `; 
+  // sql += `INNER JOIN role       ON E1.role_id   = role.id ` ; 
+  // sql += `INNER JOIN department ON role.department_id = department.id;` ; 
+
   log("viewEmployees sql: " + sql); 
   // db.query(sql + `INNER JOIN department ON role.department_id = department.id;`, (err, result) => {
   db.query(sql, (err, result) => {

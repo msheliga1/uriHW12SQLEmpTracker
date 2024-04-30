@@ -66,7 +66,15 @@ Use node, inquirer and SQL to create an 3 table employee-role-department databas
     View: 
         Department - Works, no need for join.
         Roles - Works. Inner Join on dept_id. 
-        Employees - Inner Join role on role_id and dept on dept_id
+        Employees Works 
+            Inner Join role on role_id and dept on dept_id
+            Can self-join or inner-join, but not both in one query. 
+            Had to use all inner-joins. 
+    Testing: All views and adds work. Viewing empty talbes is ok (get blank table with "indes" at top.)
+        Can add new dept. 
+        Can add new role after dept added.
+        Can not add new user if no users in db, as no manager exists. Not worth fixing at this pt, but 
+            ultimately someone needs to be their own manager (or circular managers). 
 
     Commit and push files back to gitHub/branch. (For multi-programming: Issue pull request, approve, merge).  
     Deploy code (Settings...CodeAndAnimation->Pages on left, GitHub Pages->Branch->main, save)  
@@ -116,7 +124,7 @@ Tables:
         role_id: INT to hold reference to employee role  
         manager_id: INT to hold reference to another employee that is the manager of the current employee (null if the employee has no manager)  
 
-You might want to use a separate file that contains functions for performing specific SQL queries you'll need to use.   
+You could use a separate file that contains functions for performing specific SQL queries you'll need to use.   
 A constructor function or class could be helpful for organizing these.   
-You might also want to include a seeds.sql file to pre-populate your database, making the development of individual features much easier.  
+You could include a seeds.sql file to pre-populate your db, making the dev of individual features much easier.  
 
