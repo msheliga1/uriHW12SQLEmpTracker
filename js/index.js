@@ -29,9 +29,6 @@ function init() {
   const questions = getMainPrompts(); 
   // Connect to database
   const db = myCreateConnection();
-  // viewEmployees(db);  // this seems to work!
-  // viewRoles(db); 
-  // viewDepartments(db);  
   mainMenu(questions, db)
 } // end function init
 
@@ -94,12 +91,7 @@ async function mainMenu(questions, db) {
                     break;
                 case addDeptString: 
                     log("Add Department selected."); 
-                    log("Andrew2 db.promise.query ... callback function is not avail");
-                    resSet = getDBResultSetAndrew2(null, db); 
-                    console.log("ResultSet", resSet); 
-                    break; 
                     await addDepartment(db);  // You MUST have await here to avoid synch issue
-                    log("Added dept ... looping"); 
                     break;  
                 case quitString: 
                     console.log("Quitting ... "); // Used to be done = true;
@@ -112,29 +104,7 @@ async function mainMenu(questions, db) {
 } // end function mainMenu
 
 // ========== SQL Routines ================
-// ---------- VIEW Routes (Emp, Role, Dept) ----------------
-// Simple view entire employee table from the db.
-function viewEmployees(db) {
-  // db2 = myCreateConnection(); // FIXED! Missing Recursive Param. Was cant use db more than once => recreate
-  db.query(`SELECT * FROM employee;`, (err, result) => {
-    // db.query(`DELETE FROM course_names WHERE id = ?`, 3, (err, result) => {
-    if (err) {    console.log(err);    }
-    console.log(" ");  // avoid line break issue
-    console.table(result);
-  });
-} // end viewEmployees(db)
-
-// Simple view entire role table from the db.
-function viewRoles(db) {
-  db.query(`SELECT * FROM role;`, (err, result) => {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log(" ");  // avoids annoying line break issue (terminal doesnt come back!)
-        console.table(result);  // instead of console.log
-      }  
-    });
-  } // end vkewRoles(db)
+// ---------- VIEW Routes (Dept, Role, Emp) ----------------
 
   // Simple view entire department table from the db.
   function viewDepartments(db) {
@@ -147,6 +117,38 @@ function viewRoles(db) {
       }  
     });
   } // end viewDepartments(db)
+
+// Simple view entire role table from the db. Join with dept to get deptName
+function viewRoles(db) {
+  const sql =  `SELECT title, salary, department_id, name FROM role `; 
+  db.query(sql + `INNER JOIN department ON role.department_id = department.id;`, (err, result) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(" ");  // avoids annoying line break issue (terminal doesnt come back!)
+        console.table(result);  // instead of console.log
+      }  
+    });
+  } // end viewRoles(db)
+
+// Simple view entire employee table from the db (first_name, last_name). 
+// Join with role (title, salary) and dept (names) and self (manager name). 
+// Also self join for manager name. 
+function viewEmployees(db) {
+  // db2 = myCreateConnection(); // FIXED! Missing Recursive Param. Was cant use db more than once => recreate
+  let sql =  `SELECT first_name, last_name, role_id, title, salary, department_id, name FROM employee `; 
+  sql += `INNER JOIN role       ON employee.role_id   = role.id ` ; 
+  sql += `INNER JOIN department ON role.department_id = department.id;` ; 
+  log("viewEmployees sql: " + sql); 
+  // db.query(sql + `INNER JOIN department ON role.department_id = department.id;`, (err, result) => {
+  db.query(sql, (err, result) => {
+    // db.query(`DELETE FROM course_names WHERE id = ?`, 3, (err, result) => {
+    if (err) {    console.log(err);    }
+    console.log(" ");  // avoid line break issue
+    console.table(result);
+  });
+} // end viewEmployees(db)
+
 
   // ------------ ADD Routes (Dept, Role, Emp) ---------------
   // Add a new dept to the DB. Easy since dept does NOT pt to any other table. (No FK). 
@@ -504,6 +506,12 @@ async function getDBResultSetAndrew1(data, db) {
   }) // end db.query
   return resSet; // Andrew 
 } // end getDBResultSetAndrew1
+
+
+/* log("Andrew2 db.promise.query ... callback function is not avail");
+resSet = getDBResultSetAndrew2(null, db); 
+console.log("ResultSet", resSet); 
+*/ 
 
 // From SO, per above URL 
 async function getDBResultSetAndrew2(data, db) {   

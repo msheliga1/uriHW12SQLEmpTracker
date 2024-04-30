@@ -48,8 +48,8 @@ Use node, inquirer and SQL to create an 3 table employee-role-department databas
 
     View: 
         Department - Works
-        Roles (pt to depts) - works
-        Emps (pt to roles) - works
+        Roles (pt to depts) - works, but no join
+        Emps (pt to roles) - works, but no join 
     Async - Await 
         For .inq
         For db.query 
@@ -62,7 +62,12 @@ Use node, inquirer and SQL to create an 3 table employee-role-department databas
                 Use db.promise().query(sql) instead of db.query(sql, callbackFunction); s
         Emp - Had to do a double query here. Get both roles and employees (it managers). 
             Working. 
-    Updata: 
+    Update: Role - Allowed changing of name and role, but not manager. 
+    View: 
+        Department - Works, no need for join.
+        Roles - Works. Inner Join on dept_id. 
+        Employees - Inner Join role on role_id and dept on dept_id
+
     Commit and push files back to gitHub/branch. (For multi-programming: Issue pull request, approve, merge).  
     Deploy code (Settings...CodeAndAnimation->Pages on left, GitHub Pages->Branch->main, save)  
         - Deployed code name always msheliga1/github.io/RepoName !!  
@@ -86,10 +91,10 @@ SQL DB with departments, roles, and employees.
   
 CLI inquirer app:  
 Start options: view departments, roles and employees, add department, role or employee, and update employee-role  
-View all depts shows a formatted table showing dept names ids  
-View all roles shows the job title, role id, the dept => the role belongs to, and role-salary  
-View all employees shows a formatted table with employee data, including employee ids, first names, last names, 
-    and role => job titles, departments, salaries, and emp => managers that the employees report to  
+View all depts shows a formatted table showing dept names and ids  
+View all roles shows the job title, role id, role-salary, and the dept (name) the role belongs to  
+View all employees shows a formatted table with employee: id, first name, last names, 
+    and role => job title, salary, and department (name), and emp => managers that the employees report to  
 Add a department, prompts to enter the dept name, and dept is added to the db  
 Add a role, prompts to enter the role name, salary and dept, and role is added to the db  
 Add an employee, prompts to enter the emps first name, last name, role and manager, and emp is added to the db  
