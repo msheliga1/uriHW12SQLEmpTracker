@@ -57,7 +57,9 @@ Use node, inquirer and SQL to create an 3 table employee-role-department databas
         Dept - Need to correct id. Try auto-increment.  Also made name unique 
             Works 4.28.24 
         Role - Needs to display menu of depts, not just ask for a "role" 
-            After very much efort, was able to pass db.query results to a callback. 
+            After very much effort, was able to pass db.query results to a callback. 
+            After much more effort, was able to return the result set from db.query. 
+                Use db.promise().query(sql) instead of db.query(sql, callbackFunction); s
         Emp - 
     Commit and push files back to gitHub/branch. (For multi-programming: Issue pull request, approve, merge).  
     Deploy code (Settings...CodeAndAnimation->Pages on left, GitHub Pages->Branch->main, save)  
