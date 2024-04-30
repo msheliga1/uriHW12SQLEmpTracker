@@ -56,8 +56,9 @@ Use node, inquirer and SQL to create an 3 table employee-role-department databas
     Add: 
         Dept - Need to correct id. Try auto-increment.  Also made name unique 
             Works 4.28.24 
-        Roles - Needs to display menu of depts, not just ask for a "role" 
-
+        Role - Needs to display menu of depts, not just ask for a "role" 
+            After very much efort, was able to pass db.query results to a callback. 
+        Emp - 
     Commit and push files back to gitHub/branch. (For multi-programming: Issue pull request, approve, merge).  
     Deploy code (Settings...CodeAndAnimation->Pages on left, GitHub Pages->Branch->main, save)  
         - Deployed code name always msheliga1/github.io/RepoName !!  

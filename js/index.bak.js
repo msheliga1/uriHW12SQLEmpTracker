@@ -60,7 +60,6 @@ function myCreateConnection() {
 async function mainMenu(questions, db) {
     let done = false;
     let count = 0; 
-    let resSet = null; 
     while (!done && (count < 10)) { 
         count++; 
         log("Runinng iteration ", count, " with questions ", questions); 
@@ -73,11 +72,7 @@ async function mainMenu(questions, db) {
                     break;
                 case addEmpString: 
                     log("Add Employee selected");
-                    await getRoleResults(null, db, 
-                      function(resultSet) {
-                        console.log("getRole resultSet length: ", resultSet.length);
-                        addEmp(resultSet); 
-                      });  
+                    console.log("Not Yet Implemented");
                     break;
                 case updateEmpRoleString: 
                     log("Update Employee Role selected.");
@@ -88,22 +83,19 @@ async function mainMenu(questions, db) {
                     viewRoles(db);
                     break;
                 case addRoleString: 
-                    log("Add Role selected.");  
-                    await addRole(db); 
+                    log("Add Role selected");  // first value below for params
+                    await getDeptResults(null, db, 
+                      function(resultSet) {
+                        console.log("getDept resultSet length: ", resultSet.length);
+                        addRole(db, resultSet); 
+                      });  
                     break;
                 case viewDeptString: 
-                    log("view All Departents selected.");
-                    log("Andrew1. db.query => invoked await on non-promise. Try con.promise().query ... ");
-                    resSet = await getDeptResultsAndrew1(null, db); 
-                    break; 
+                    log("view All Departents selected");
                     viewDepartments(db); 
                     break;
                 case addDeptString: 
-                    log("Add Department selected."); 
-                    log("Andrew2 db.promise.query ... callback function is not avail");
-                    resSet = getDeptResultsAndrew2(null, db); 
-                    console.log("ResultSet", resSet); 
-                    break; 
+                    log("Add Department selected"); 
                     await addDepartment(db);  // You MUST have await here to avoid synch issue
                     log("Added dept ... looping"); 
                     break;  
@@ -192,49 +184,13 @@ function viewRoles(db) {
   } // end addDepartmentThen(db)
 
   // Add a new role to the DB. A role pts to a dept, so this is harder.  
-  // To get the resultSet from db.query was EXCEPTIONALLY difficult. 
-  async function addRole(db) { 
-    log("Starting addRole ... "); 
-    const result = await getDeptResults(db);  
-    // console.log("Result of db.query ..", result)
-    // result actually consists of [ [resultSet] [query] ]
-    const resSet = result[0]; 
-    console.log("addRole. getDeptResults returned: ", resSet); 
-    // Generate inquirer questions, including list of departments.
-    const roleQuestions = await getRoleQuestions(resSet);   // need await or crashes.
-    log("Role questions: ", roleQuestions); 
-    // Now display the inquirer questions  
-    const ans = await inq.prompt(roleQuestions); 
-    const dept_id = ans.dept_string.split("-")[0]; 
-    let queryString = `INSERT INTO role (title, salary, department_id)`;
-    queryString += `VALUES ("${ans.roleName}", "${ans.roleSalary}", "${dept_id}" )`;
-    // log("addRole queryString is: " + queryString);
-    db.query(queryString, (err, result) => {
-        err ? console.log(err) : console.log(queryString + " SUCESSFUL.");
-    }); // end db.query()
-    console.log("Done adding new role!"); 
-  } // end addRole(db)
-
-   // See what an INCREDIBLE mess callbacks are .... 
-   // Believe it or not, this WORKED but was such a mess I finally figured out how to get rid of it!
-  /*  async function addRoleOld(db) { 
-        /* resSet = await getDeptResultsAndrew(db); 
-          console.log("Result set is ", resSet); 
-          await getDeptResults(null, db, 
-          function(resultSet) {
-          console.log("getDept resultSet length: ", resultSet.length);
-          addRole(resultSet); 
-          });   
-  } // end addRoleOld() */
-
-  // Add a new role to the DB. A role pts to a dept, so this is harder.  
   // but I cant find a way around it due to .then synch issues.  Maybe await .... 
-  async function addEmp(resultSet) { 
-    log("Starting addEmp ... "); 
+  async function addRole(db, resultSet) { 
+    log("Starting addRole ... "); 
     // Now display the questions  
-    const inqQuestions = await getEmpQuestions(resultSet);   // need await here. 
-    log("Employee questions: ", inqQuestions); 
-    const ans = await inq.prompt(inqQuestions); 
+    const roleQuestions = await getRoleQuestions(resultSet);   // need await here. 
+    log("Role questions: ", roleQuestions); 
+    const ans = await inq.prompt(roleQuestions); 
     const dept_id = ans.dept_string.split("-")[0]; 
     let queryString = `INSERT INTO role (title, salary, department_id)`;
     queryString += `VALUES ("${ans.roleName}", "${ans.roleSalary}", "${dept_id}" )`;
@@ -243,7 +199,7 @@ function viewRoles(db) {
         err ? console.log(err) : console.log(result);
     }); // end db.query()
     console.log("Done adding new role!"); 
-  } // end addRole(resultSet)
+  } // end addRole(db)
 
 //------------------------------
 // Init Menus and Questions - Inquirer prompts 
@@ -349,7 +305,6 @@ getDeptResults(parm, db, function(returnVal) {
         }
         log("ChoiceStr is " + choiceStr); 
         log("ChoicesArray.length is " + choicesArray.length); 
-        
       } // end if err else 
     }); // end db.query() - can't return anything from this inner method. Arghhh.
 
@@ -382,76 +337,12 @@ getDeptResults(parm, db, function(returnVal) {
   });
 }); */  
 
-async function getDeptResultsAndrew1(data, db) {   
+// From SO 
+function getDeptResults(data, db, callback) {   
   const sql = `SELECT id, name FROM department`;
-  // Set async function getDeptResults .. then do awati. 
-  let myString = "Orig string outside db.query."; 
-  // Andrew suggested return db.query - Could try .then callbacks. 
-  // Error msg for db.query ... suggested conn.promise().query
-  const resSet = await db.query(sql, function(err, results) {  
-        if (err) { throw err; }
-        myString += " ... plus inside db.query function. "; 
-        console.log("Got Dept results. Number of Results: ", results.length); // good
-        // console.log("myString", myString); 
-        // return callback(results);  // Scope is larger than function
-        return results; // Andrew suggested
-  }) // end db.query
-  return resSet; // Andrew 
-} // end getDeptResultsAndrew  
-
-// From SO, per above URL 
-async function getDeptResultsAndrew2(data, db) {   
-  const sql = `SELECT id, name FROM department`;
-  // Set async function getDeptResults .. then do awati. 
-  let myString = "Orig string outside db.query."; 
-  // Andrew suggested return db.query - Could try .then callbacks. 
-  // Error msg for db.query ... suggested conn.promise().query
-  // Error msg for db.promise().query ... 
-  // Error: Callback function is not available with promise clients. at PromiseConnection.query
-  const resSet = await db.promise().query(sql, function(err, results) {  
-        if (err) { throw err; }
-        myString += " ... plus inside db.query function. "; 
-        console.log("Got Dept results. Number of Results: ", results.length); // good
-        // console.log("myString", myString); 
-        // return callback(results);  // Scope is larger than function
-        return results; // Andrew suggested
-  }) // end db.query
-  return resSet; // Andrew 
-} // end getDeptResultsAndrew2   
-
-// This returns "Result Set is a promise <pending>" IF caller does not have AWAIT before getDeptResults 
-// An indordinate number of hours was spent trying to get this to both work and work "naturally", without 
-// callbacks or query(sql, funct).  Here it finally is.  This is way, way beyond the scope of the class. 
-async function getDeptResults(db) {  
-  console.log("Staring getDeptResults ..."); 
-  const sql = `SELECT id, name FROM department`;
-  // Set async function getDeptResults .. then do await. 
-  // Andrew suggested return db.query - Could try .then callbacks. 
-  // Error msg for db.query ... suggested conn.promise().query
-  // Error msg for db.promise().query ... 
-  //     Callback function is not available with promise clients. at PromiseConnection.query
-  // Got rid of callback method in query(sql, callbackFunction) .... 
-  // Calling routine complained result was uncompleted promise ... added await to caller -> WORKS. 
-  const qresult = await db.promise().query(sql) 
-  console.log("Got query result ", qresult);  // [[resSet] [queryString]]
-  return qresult; // Per Andrew  
-} // end getDeptResults 
-
-// From SO, per above URL 
-/* async function getDeptResultsOld(data, db, callback) {   
-  const sql = `SELECT id, name FROM department`;
-  const resSet = await db.query(sql, function(err, results) {  
-        if (err) { throw err; }
-        console.log("Got Dept results. Number of Results: ", results.length); // good
-        // return callback(results);  // Scope is larger than function
-  }) 
-} */ 
-
-function getRoleResults(data, db, callback) {   
-  const sql = `SELECT id, title FROM role`;
   db.query(sql, function(err, results) {
         if (err) { throw err; }
-        console.log("Got Role results. Number of Results: ", results.length); // good
+        console.log("Got Dept results. Number of Results: ", results.length); // good
         return callback(results);  // Scope is larger than function
 })
 } // end getDeptResults 
