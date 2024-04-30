@@ -254,12 +254,12 @@ function viewRoles(db) {
     const sql2 = `SELECT id, first_name, last_name FROM employee`;
     const empResSet = await getDBResultSet(db, sql2);  
     log("Emp result set " + empResSet); 
-    const inqQuestions = await getEmpQuestions(roleResSet, empResSet);   // need await here. 
+    const inqQuestions = await getEmpUpdateQuestions(roleResSet, empResSet);   // need await here. 
     log("Employee questions: " + inqQuestions); 
     // Now display the questions using inquirer.   
     const ans = await inq.prompt(inqQuestions); 
     const role_id = ans.role_string.split("-")[0]; 
-    const emp_id = ans.manager_string.split("-")[0]; 
+    const emp_id = ans.emp_string.split("-")[0]; 
     // UPDATE table_name SET column1 = value1, column2 = value2, ... WHERE condition; 
     // let queryString = `UPDATE employee SET first_name = "${ans.firstname}" WHERE id = 2'; 
     // Be sure both quotes are back-ticks. Watch camelCase ie. firstName
@@ -379,6 +379,43 @@ async function getEmpQuestions(resultSetRole, resultSetEmp) {
           default: '1', choices: empArray,  }, 
     ];
     return  questions; 
+} // end getEmpQuestions
+
+// The function that calls this function also needs await. 
+// db.query examples start in 12-22 generally in server.js. 
+async function getEmpUpdateQuestions(resultSetRole, resultSetEmp) { 
+  // Gather the role names and IDs from the resultSet
+  let choicesArray = []; 
+  console.log("AddEmpUpdateQuestions input role resultSet length " + resultSetRole.length);
+  log("AddEmpUpdateQuestions role result set: ");
+  log(resultSetRole); 
+  for (let i=0; i < resultSetRole.length; i++) {
+        res = resultSetRole[i]; 
+        choicesArray.push("" + res.id + " - " + res.title); 
+  }
+  log("ChoicesArray.length is " + choicesArray.length); 
+  if (choicesArray[0]) {log("ChoicesArray[0] is " + choicesArray[0]);} 
+  // Gather the employee (potential manager) names from Employee result set. 
+  let empArray = []; 
+  console.log("UpdateEmpQuestions input employee resultSet length " + resultSetEmp.length);
+  log("UpdateEmpQuestions employee result set: ");
+  log(resultSetEmp); 
+  for (let i=0; i < resultSetEmp.length; i++) {
+        res = resultSetEmp[i]; 
+        empArray.push("" + res.id + " - " + res.first_name + " " + res.last_name); 
+  }
+  log("EmployeeArray.length is " + empArray.length); 
+  if (empArray[0]) {log("EmployeeArray[0] is " + empArray[0]);} 
+  const questions = [
+    {   type: 'rawlist', message: 'Please select employee to update:', name: 'emp_string', 
+    default: '1', choices: empArray,  }, 
+    {   type: 'input', message: 'Enter updated employee first name:', name: 'firstName', }, 
+    {   type: 'input', message: 'Enter updated employee last name:', name: 'lastName', }, 
+    // rawlist => numbered list. (plain list has no numbers)
+    {   type: 'rawlist', message: 'Select updated role:', name: 'role_string', 
+        default: '1', choices: choicesArray,  }, 
+  ];
+  return  questions; 
 } // end getEmpQuestions
 
 // MJS 4.28.24 - This version of mySQL does NOT use .then for db.Query.  Hence it cant use asynch await db.query
