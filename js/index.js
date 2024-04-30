@@ -20,7 +20,7 @@ const quitString     = "Quit";
 
 // Log method to be able to turn all comments on-off at once
 function log(str) { 
-    console.log(str);
+    // console.log(str);
 }
 
 // Create a connection to the db MJS 2.15.24

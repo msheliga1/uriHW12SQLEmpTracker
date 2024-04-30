@@ -16,15 +16,10 @@ VALUE   (001, "Java Programmer", 8000, 006),
 SELECT * FROM role;
 
 INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
-VALUE   (001, "Mike", "Sheliga", 001, 011), 
-        (002, "Andrew", "Bautista", 002, 011), 
-        (011, "Mom",  "Sheliga", 005, 011);
-
-UPDATE employee SET first_name = "UpdateName"; 
+VALUE   (001, "Mike", "Sheliga", 001, 002), 
+        (002, "Andrew", "Bautista", 002, 003), 
+        (003, "Mom",  "Sheliga", 003, 003), 
+        (004, "Bo",  "BoLast", 004, 003);
+-- UPDATE employee SET first_name = "UpdateName"; 
 
 SELECT * FROM employee;
-
-
-
-
-
