@@ -58,12 +58,13 @@ function myCreateConnection() {
 // ====== All Menu Methods Next =========================
 // main inquirer .prompt routine. MJS 2.15.24
 async function mainMenu(questions, db) {
+    log("Starting mainMenu with questions " + questions); 
     let done = false;
     let count = 0; 
     let resSet = null; 
     while (!done && (count < 10)) { 
         count++; 
-        log("Runinng iteration ", count, " with questions ", questions); 
+        log("Runinng mainMenu iteration " + count); 
         const ans = await inq.prompt(questions)
         log("Got prompt ans" + count + " ... Answer selection is " + ans.selection);
             switch (ans.selection) { 
@@ -77,7 +78,7 @@ async function mainMenu(questions, db) {
                     break;
                 case updateEmpRoleString: 
                     log("Update Employee Role selected.");
-                    console.log("Not Yet Implemented");
+                    await updateEmployee(db); 
                     break;
                 case viewRoleString: 
                     log("View All Roles selected");
@@ -115,11 +116,9 @@ async function mainMenu(questions, db) {
 // Simple view entire employee table from the db.
 function viewEmployees(db) {
   // db2 = myCreateConnection(); // FIXED! Missing Recursive Param. Was cant use db more than once => recreate
-  db.query(`SELECT * FROM employee`, (err, result) => {
+  db.query(`SELECT * FROM employee;`, (err, result) => {
     // db.query(`DELETE FROM course_names WHERE id = ?`, 3, (err, result) => {
-    if (err) {
-      console.log(err);
-    }
+    if (err) {    console.log(err);    }
     console.log(" ");  // avoid line break issue
     console.table(result);
   });
@@ -127,7 +126,7 @@ function viewEmployees(db) {
 
 // Simple view entire role table from the db.
 function viewRoles(db) {
-  db.query(`SELECT * FROM role`, (err, result) => {
+  db.query(`SELECT * FROM role;`, (err, result) => {
       if (err) {
         console.log(err);
       } else {
@@ -237,13 +236,42 @@ function viewRoles(db) {
     const role_id = ans.role_string.split("-")[0]; 
     const manager_id = ans.manager_string.split("-")[0]; 
     let queryString = `INSERT INTO employee (first_name, last_name, role_id, manager_id) `;
-    queryString += `VALUES ("${ans.firstName}", "${ans.lastName}", "${role_id}",  "${manager_id}" )`;
+    queryString += `VALUES ("${ans.firstName}", "${ans.lastName}", "${role_id}",  "${manager_id}" );`;
     log("addEmployee queryString is: " + queryString);
     db.query(queryString, (err, result) => {
         err ? console.log("addEmployee " + err) : console.log("SUCCESS - " + queryString);
     }); // end db.query()
     log("Done adding new employee!"); 
-  } // end addRole(resultSet)
+  } // end addEmployee(db)
+
+    // Add an employee to the DB. An emp pts to a role and manager so this is harder. .  
+  // Need to get 2 result sets, generate inquirer prompt, prompt user and add new employee. 
+  async function updateEmployee(db) { 
+    log("Starting updateEmployee ... "); 
+    const sql = `SELECT id, title FROM role`;
+    const roleResSet = await getDBResultSet(db, sql);  
+    log("Role result set " + roleResSet); 
+    const sql2 = `SELECT id, first_name, last_name FROM employee`;
+    const empResSet = await getDBResultSet(db, sql2);  
+    log("Emp result set " + empResSet); 
+    const inqQuestions = await getEmpQuestions(roleResSet, empResSet);   // need await here. 
+    log("Employee questions: " + inqQuestions); 
+    // Now display the questions using inquirer.   
+    const ans = await inq.prompt(inqQuestions); 
+    const role_id = ans.role_string.split("-")[0]; 
+    const emp_id = ans.manager_string.split("-")[0]; 
+    // UPDATE table_name SET column1 = value1, column2 = value2, ... WHERE condition; 
+    // let queryString = `UPDATE employee SET first_name = "${ans.firstname}" WHERE id = 2'; 
+    // Be sure both quotes are back-ticks. Watch camelCase ie. firstName
+    // let queryString = `UPDATE employee SET first_name = "${ans.firstName}" WHERE id = ${emp_id} ; `;  
+    let queryString = `UPDATE employee SET first_name = "${ans.firstName}", last_name = "${ans.lastName}", `
+    queryString +=  ` role_id = "${role_id}" WHERE id = ${emp_id} ; `;    
+    log("updateEmployee queryString is: " + queryString);
+    db.query(queryString, (err, result) => {
+        err ? console.log("Update Employee " + err) : console.log("SUCCESS - " + queryString);
+    }); // end db.query()
+    log("Done updating new employee!"); 
+  } // end updateEmployee(db)
 
 //------------------------------
 // Init Menus and Questions - Inquirer prompts 

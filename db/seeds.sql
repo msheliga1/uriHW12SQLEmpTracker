@@ -19,6 +19,9 @@ INSERT INTO employee (id, first_name, last_name, role_id, manager_id)
 VALUE   (001, "Mike", "Sheliga", 001, 011), 
         (002, "Andrew", "Bautista", 002, 011), 
         (011, "Mom",  "Sheliga", 005, 011);
+
+UPDATE employee SET first_name = "UpdateName"; 
+
 SELECT * FROM employee;
 
 

@@ -60,7 +60,9 @@ Use node, inquirer and SQL to create an 3 table employee-role-department databas
             After very much effort, was able to pass db.query results to a callback. 
             After much more effort, was able to return the result set from db.query. 
                 Use db.promise().query(sql) instead of db.query(sql, callbackFunction); s
-        Emp - 
+        Emp - Had to do a double query here. Get both roles and employees (it managers). 
+            Working. 
+    Updata: 
     Commit and push files back to gitHub/branch. (For multi-programming: Issue pull request, approve, merge).  
     Deploy code (Settings...CodeAndAnimation->Pages on left, GitHub Pages->Branch->main, save)  
         - Deployed code name always msheliga1/github.io/RepoName !!  
@@ -85,12 +87,13 @@ SQL DB with departments, roles, and employees.
 CLI inquirer app:  
 Start options: view departments, roles and employees, add department, role or employee, and update employee-role  
 View all depts shows a formatted table showing dept names ids  
-View all roles shows the job title, role id, the dept the role belongs to, and role-salary  
-View all employees shows a formatted table with employee data, including employee ids, first names, last names, job titles, departments, salaries, and managers that the employees report to  
+View all roles shows the job title, role id, the dept => the role belongs to, and role-salary  
+View all employees shows a formatted table with employee data, including employee ids, first names, last names, 
+    and role => job titles, departments, salaries, and emp => managers that the employees report to  
 Add a department, prompts to enter the dept name, and dept is added to the db  
 Add a role, prompts to enter the role name, salary and dept, and role is added to the db  
 Add an employee, prompts to enter the emps first name, last name, role and manager, and emp is added to the db  
-Update an employee role, prompts to select an employee to update and their new role and this info is updated in the db  
+Update an employee role, prompts to select an employee to update and their new role and this info is updated in the db. 
 
 Tables:  
     department  
