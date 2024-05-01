@@ -4,9 +4,11 @@ Michael Sheliga - This repo is for the University of Richmond (URI) coding bootc
 
 ## Link to Repo, Screenshot(s) and/or Video(s)  
 Link to GitHub Repo: https://github.com/msheliga1/uriHW12SQLEmpTracker    
+Link to MP4 Video on Google Drive: 
+Since ScreenCastify videos maxed out at 10, used Windows10 Recorder to create an MP4 video. 
+ https://drive.google.com/file/d/1bJbkN408LRT0tG2RLJ2g01bBHOS1XjFg/view?usp=drive_link  
 <!---  Link to deployed github.io site. https://msheliga1.github.io/uriHW9NodeReadmeGen --->  
 <!-- Link to logo.svg: https://github.com/msheliga1/uriHW10OOPLogoGenerator/blob/main/examples/logo.svg  --->  
-Link to Video on Google Drive: https://drive.google.com/file/d/1NqSNz5vp7zit4KaUKGl09QM4u58gx9wA/view  
 <!-- Link to Video on GitHub [Link](./examples/hw10LogoGenSheliga.webm)   Note that this video may be too large to play in GitHub, so you will need to download and play from your computer. WindowsMediaPlayer worked for me.  -->
 
 [Link to Acceptance Criteria ](#acceptance-criteria)   
@@ -80,8 +82,14 @@ Use node, inquirer and SQL to create an 3 table employee-role-department databas
     Deploy code (Settings...CodeAndAnimation->Pages on left, GitHub Pages->Branch->main, save)  
         - Deployed code name always msheliga1/github.io/RepoName !!  
     Make Sure it Works   
-    Insert Screencastify (Chrome) Video and/or Screenshot X2 of deployment into readme file. 
-  
+    Insert Video and/or Screenshot X2 of deployment into readme file. 
+        - Screencastify (Chrome) is maxed out. Only 10 vids allowed. 
+        - Windows10 recorder works well. Windows-Alt-R will record one window (but not entire screen). 
+            Video saved to thisPC/videos/captures folder. 
+        - Just go to google drive and you can copy the video using the Windows10 interface to google drive.
+            Share - make sure folks with the link can view the video.
+            Copy Link - So you can insert the link in the README and share it. 
+
 ## Tools and Technologies Used   
     Github - Branches not needed, but could use.  
         - GitIgnore to keep NPM libraries out of gitHub repo.  
@@ -90,7 +98,7 @@ Use node, inquirer and SQL to create an 3 table employee-role-department databas
         fs - fileSystem    
         inquirer - Used for prompts (text, list, checkboxes, editor, etc.)   
     mySQL - install is from the DEVIL!
-    SQL - Standard Query Language 
+    SQL - Standard Query Language - inner joins x 3, insert, update, etc. 
     Agile - Try to assign a little work at a time.   
 
 ## Acceptance Criteria   
@@ -127,4 +135,3 @@ Tables:
 You could use a separate file that contains functions for performing specific SQL queries you'll need to use.   
 A constructor function or class could be helpful for organizing these.   
 You could include a seeds.sql file to pre-populate your db, making the dev of individual features much easier.  
-
